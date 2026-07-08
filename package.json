@@ -43,10 +43,7 @@
       "cordova-plugin-network-information": {},
       "cordova-plugin-device": {},
       "cordova-plugin-android-permissions": {},
-      "cordova-plugin-foreground-service": {
-        "FOREGROUND_SERVICE_ENABLED": "true"
-      }
-    },
+      
     "platforms": [
       "android"
     ]
