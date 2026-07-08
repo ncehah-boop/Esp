@@ -31,13 +31,15 @@ jobs:
       - name: Add Android platform
         run: cordova platform rm android --no-fetch || true && cordova platform add android --no-fetch
 
-      - name: Clean
+      - name: Fix build files
         run: |
           rm -rf platforms/android/app/build platforms/android/CordovaLib/build
-          cd platforms/android && ./gradlew clean || true
+          cp build-extras.gradle platforms/android/app/
+          # Ensure compileSdk in root
+          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/' platforms/android/app/build.gradle || true
 
-      - name: Copy build-extras
-        run: cp build-extras.gradle platforms/android/app/
+      - name: Clean
+        run: cd platforms/android && ./gradlew clean || true
 
       - name: Build Debug APK
         run: cordova build android --debug --verbose
