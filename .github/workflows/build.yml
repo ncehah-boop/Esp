@@ -26,23 +26,23 @@ jobs:
         run: npm install -g cordova
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Add Android platform
-        run: cordova platform add android --no-fetch
+        run: cordova platform rm android --no-fetch || true && cordova platform add android --no-fetch
 
-      - name: Clean previous build
+      - name: Clean
         run: |
-          rm -rf platforms/android/app/build
+          rm -rf platforms/android/app/build platforms/android/CordovaLib/build
           cd platforms/android && ./gradlew clean || true
 
       - name: Copy build-extras
         run: cp build-extras.gradle platforms/android/app/
 
-      - name: Build Debug APK (API 34)
-        run: cordova build android --debug
+      - name: Build Debug APK
+        run: cordova build android --debug --verbose
 
-      - name: Upload Debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: wemos-app-debug
