@@ -1,14 +1,65 @@
-ext {
-    minSdkVersion = 24
-    targetSdkVersion = 34
-    compileSdkVersion = 34
-}
+// ============================================================
+// build-extras.gradle — Wemos D1 Smartwatch Pro
+// API 34 | JDK 17 | Cordova 13 | cordova-android 13.0.0
+// ============================================================
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    
+    compileSdkVersion 34
+    buildToolsVersion "34.0.0"
+
     defaultConfig {
-        versionCode 42
+        minSdkVersion 24
+        targetSdkVersion 34
+        versionCode 42000
         versionName "4.2.0"
+        multiDexEnabled true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    packagingOptions {
+        pickFirst '**/libc++_shared.so'
+        pickFirst '**/libjsc.so'
+    }
+
+    lintOptions {
+        disable 'MissingTranslation', 'ExtraTranslation'
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.work:work-runtime:2.9.0'
+    implementation 'androidx.media:media:1.7.0'
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android.compileSdkVersion = 34
+            project.android.buildToolsVersion = "34.0.0"
+        }
     }
 }
