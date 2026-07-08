@@ -6,6 +6,7 @@ ext {
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
+    
     defaultConfig {
         versionCode 42
         versionName "4.2.0"
