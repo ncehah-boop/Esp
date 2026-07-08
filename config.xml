@@ -27,10 +27,13 @@
   <preference name="StatusBarBackgroundColor" value="#0d0b1a" />
   <preference name="StatusBarStyle" value="lightcontent" />
   <preference name="BackgroundMode" value="true" />
+  
   <platform name="android">
     <preference name="android-minSdkVersion" value="24" />
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-compileSdkVersion" value="34" />
+    
+    <!-- Permissions -->
     <config-file parent="/*" target="AndroidManifest.xml">
       <uses-permission android:name="android.permission.INTERNET" />
       <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -44,11 +47,22 @@
       <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
       <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
       <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+      <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+      <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     </config-file>
+    
+    <!-- Cleartext traffic untuk HTTP ke Wemos -->
     <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
       <application android:usesCleartextTraffic="true" />
     </edit-config>
+    
+    <!-- Wake screen -->
+    <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application/activity[@android:name='MainActivity']">
+      <activity android:showOnLockScreen="true" android:turnScreenOn="true" />
+    </edit-config>
   </platform>
+  
+  <!-- Plugins -->
   <plugin name="cordova-plugin-background-mode" source="npm" />
   <plugin name="cordova-plugin-local-notification" source="npm" />
   <plugin name="cordova-plugin-insomnia" source="npm" />
