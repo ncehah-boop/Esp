@@ -1,0 +1,11 @@
+ext {
+    minSdkVersion = 24
+    targetSdkVersion = 34
+    compileSdkVersion = 34
+}
+android {
+    defaultConfig {
+        versionCode 42
+        versionName "4.2.0"
+    }
+}
