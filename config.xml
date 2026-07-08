@@ -89,6 +89,6 @@
     <plugin name="cordova-plugin-network-information" source="npm" />
     <plugin name="cordova-plugin-device" source="npm" />
     <plugin name="cordova-plugin-android-permissions" source="npm" />
-    <plugin name="cordova-plugin-foreground-service" source="npm" />
+    
 
 </widget>
