@@ -6,19 +6,9 @@
   "main": "index.js",
   "scripts": {
     "build": "cordova build android --debug",
-    "build-debug": "cordova build android --debug",
-    "clean": "cordova clean",
-    "platform:add:android": "cordova platform add android@13.0.0",
-    "plugin:add": "cordova plugin add"
+    "clean": "cordova clean"
   },
-  "keywords": [
-    "cordova",
-    "wemos",
-    "esp8266",
-    "iot",
-    "smartwatch",
-    "alarm"
-  ],
+  "keywords": ["cordova", "wemos", "esp8266", "iot", "alarm"],
   "author": "Wemos IoT Developer",
   "license": "MIT",
   "devDependencies": {
@@ -26,27 +16,6 @@
   },
   "dependencies": {
     "cordova-android": "^13.0.0"
-  },
-  "cordova": {
-    "plugins": {
-      "cordova-plugin-background-mode": {
-        "ANDROID_SUPPORT_V4_VERSION": "26.+"
-      },
-      "cordova-plugin-local-notification": {
-        "ANDROID_SUPPORT_V4_VERSION": "26.+",
-        "ANDROIDX_VERSION": "1.0.0",
-        "OKHTTP_VERSION": "3.12.0"
-      },
-      "cordova-plugin-insomnia": {},
-      "cordova-plugin-statusbar": {},
-      "cordova-plugin-vibration": {},
-      "cordova-plugin-network-information": {},
-      "cordova-plugin-device": {},
-      "cordova-plugin-android-permissions": {},
-      
-    "platforms": [
-      "android"
-    ]
   },
   "engines": {
     "node": ">=18.0.0",
