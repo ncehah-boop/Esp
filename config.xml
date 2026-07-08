@@ -79,17 +79,6 @@
             </receiver>
         </config-file>
 
-        <icon src="res/icon/android/mipmap-mdpi/ic_launcher.png" density="mdpi" />
-        <icon src="res/icon/android/mipmap-hdpi/ic_launcher.png" density="hdpi" />
-        <icon src="res/icon/android/mipmap-xhdpi/ic_launcher.png" density="xhdpi" />
-        <icon src="res/icon/android/mipmap-xxhdpi/ic_launcher.png" density="xxhdpi" />
-        <icon src="res/icon/android/mipmap-xxxhdpi/ic_launcher.png" density="xxxhdpi" />
-
-        <splash src="res/screen/android/splash-port-mdpi.png" density="port-mdpi" />
-        <splash src="res/screen/android/splash-port-hdpi.png" density="port-hdpi" />
-        <splash src="res/screen/android/splash-port-xhdpi.png" density="port-xhdpi" />
-        <splash src="res/screen/android/splash-port-xxhdpi.png" density="port-xxhdpi" />
-        <splash src="res/screen/android/splash-port-xxxhdpi.png" density="port-xxxhdpi" />
     </platform>
 
     <plugin name="cordova-plugin-background-mode" source="npm" />
