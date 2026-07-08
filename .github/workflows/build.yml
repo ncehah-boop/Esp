@@ -1,51 +1,236 @@
-name: Build Debug APK
+name: Build Wemos D1 Pro APK (Debug)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, master, develop]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '.github/**'
   pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: 18
+  JAVA_VERSION: 17
+  CORDOVA_VERSION: "13.0.0"
+  CORDOVA_ANDROID_VERSION: "13.0.0"
+  ANDROID_SDK_VERSION: "34.0.0"
 
 jobs:
-  build:
+  build-apk-debug:
+    name: Build Android Debug APK
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 30
 
-      - name: Setup JDK 17
+    steps:
+      # ═══════════════════════════════════════════════════════
+      # STEP 1: Checkout Repository
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 2: Setup Node.js
+      # ═══════════════════════════════════════════════════════
+      - name: 2️⃣ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 3: Setup JDK 17
+      # ═══════════════════════════════════════════════════════
+      - name: 3️⃣ Setup JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # ═══════════════════════════════════════════════════════
+      # STEP 4: Setup Android SDK (API 34)
+      # ═══════════════════════════════════════════════════════
+      - name: 4️⃣ Setup Android SDK (API 34)
+        uses: android-actions/setup-android@v3
         with:
-          node-version: 20
+          cmdline-tools-version: '11076708'
+          packages: 'platforms;android-34 build-tools;34.0.0 platform-tools'
 
-      - name: Install Cordova
-        run: npm install -g cordova
+      # ═══════════════════════════════════════════════════════
+      # STEP 5: Cache Gradle
+      # ═══════════════════════════════════════════════════════
+      - name: 5️⃣ Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            platforms/android/.gradle
+          key: ${{ runner.os }}-gradle-api34-${{ hashFiles('**/package.json', '**/config.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-api34-
+            ${{ runner.os }}-gradle-
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Add Android platform
-        run: cordova platform rm android --no-fetch || true && cordova platform add android --no-fetch
-
-      - name: Fix build files
+      # ═══════════════════════════════════════════════════════
+      # STEP 6: Install Cordova CLI
+      # ═══════════════════════════════════════════════════════
+      - name: 6️⃣ Install Cordova CLI v${{ env.CORDOVA_VERSION }}
         run: |
-          rm -rf platforms/android/app/build platforms/android/CordovaLib/build
-          cp build-extras.gradle platforms/android/app/
-          # Ensure compileSdk in root
-          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/' platforms/android/app/build.gradle || true
+          echo "Installing Cordova CLI..."
+          npm install -g cordova@${{ env.CORDOVA_VERSION }}
+          cordova --version
+          echo "Cordova CLI installed successfully"
 
-      - name: Clean
-        run: cd platforms/android && ./gradlew clean || true
+      # ═══════════════════════════════════════════════════════
+      # STEP 7: Install npm dependencies
+      # ═══════════════════════════════════════════════════════
+      - name: 7️⃣ Install npm dependencies
+        run: |
+          echo "Installing npm packages..."
+          npm ci || npm install
+          echo "npm dependencies installed"
 
-      - name: Build Debug APK
-        run: cordova build android --debug --verbose
+      # ═══════════════════════════════════════════════════════
+      # STEP 8: Clean old platforms & plugins
+      # ═══════════════════════════════════════════════════════
+      - name: 8️⃣ Clean old platforms & plugins
+        run: |
+          echo "Cleaning old platforms and plugins..."
+          rm -rf platforms/ plugins/ node_modules/cordova-android
+          echo "Clean complete"
 
-      - name: Upload APK
+      # ═══════════════════════════════════════════════════════
+      # STEP 9: Add Android Platform
+      # ═══════════════════════════════════════════════════════
+      - name: 9️⃣ Add Android Platform v${{ env.CORDOVA_ANDROID_VERSION }}
+        run: |
+          echo "Adding Android platform..."
+          cordova platform add android@${{ env.CORDOVA_ANDROID_VERSION }} --save
+          echo "Android platform added"
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 10: Install Cordova Plugins
+      # ═══════════════════════════════════════════════════════
+      - name: 🔟 Install Cordova Plugins
+        run: |
+          echo "Installing Cordova plugins..."
+          cordova plugin add cordova-plugin-background-mode --save
+          cordova plugin add cordova-plugin-local-notification --save
+          cordova plugin add cordova-plugin-insomnia --save
+          cordova plugin add cordova-plugin-statusbar --save
+          cordova plugin add cordova-plugin-vibration --save
+          cordova plugin add cordova-plugin-network-information --save
+          cordova plugin add cordova-plugin-device --save
+          cordova plugin add cordova-plugin-android-permissions --save
+          cordova plugin add cordova-plugin-foreground-service --save
+          echo "All plugins installed"
+          echo ""
+          echo "=== Installed Plugins ==="
+          cordova plugin list
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 11: Verify project structure
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣1️⃣ Verify project structure
+        run: |
+          echo "=== Project Structure ==="
+          ls -la
+          echo ""
+          echo "=== www/ folder ==="
+          ls -la www/ || echo "WARNING: www/ folder not found!"
+          echo ""
+          echo "=== config.xml ==="
+          cat config.xml | head -20
+          echo ""
+          echo "=== Cordova Info ==="
+          cordova info || true
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 12: Copy build-extras.gradle
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣2️⃣ Copy build-extras.gradle
+        run: |
+          echo "Copying build-extras.gradle..."
+          mkdir -p platforms/android/app
+          cp build-extras.gradle platforms/android/app/build-extras.gradle
+          echo "build-extras.gradle copied"
+          cat platforms/android/app/build-extras.gradle
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 13: Build Debug APK
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣3️⃣ Build Debug APK
+        run: |
+          echo "Building debug APK..."
+          cordova build android --debug --no-telemetry
+          echo "Build complete"
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 14: Verify APK output
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣4️⃣ Verify APK output
+        run: |
+          echo "=== APK Output Directory ==="
+          ls -la platforms/android/app/build/outputs/apk/debug/ || echo "APK not found!"
+          echo ""
+          echo "=== APK File Info ==="
+          find platforms/android/app/build/outputs/apk -name "*.apk" -exec ls -lah {} +
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 15: Rename & organize APK
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣5️⃣ Rename & organize APK
+        run: |
+          mkdir -p artifacts
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          SHORT_SHA=${{ github.sha }}
+          SHORT_SHA=${SHORT_SHA:0:7}
+          
+          APK_NAME="WemosPro-v4.2.0-debug-${TIMESTAMP}-${SHORT_SHA}.apk"
+          
+          echo "Renaming APK to: ${APK_NAME}"
+          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk artifacts/${APK_NAME}
+          
+          echo ""
+          echo "=== Final Artifacts ==="
+          ls -lah artifacts/
+          
+          echo "APK_NAME=${APK_NAME}" >> $GITHUB_ENV
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 16: Upload APK Artifact
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣6️⃣ Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wemos-app-debug
-          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          name: wemos-pro-debug-${{ github.run_number }}-${{ github.sha }}
+          path: artifacts/*.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      # ═══════════════════════════════════════════════════════
+      # STEP 17: Build Summary
+      # ═══════════════════════════════════════════════════════
+      - name: 1️⃣7️⃣ Build Summary
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════════════════════════════╗"
+          echo "║           BUILD SUCCESSFUL — WEMOS D1 PRO                    ║"
+          echo "╠══════════════════════════════════════════════════════════════╣"
+          echo "║  APK File: ${{ env.APK_NAME }}"
+          echo "║  API Level: 34 (Android 14)"
+          echo "║  JDK: 17"
+          echo "║  Cordova CLI: ${{ env.CORDOVA_VERSION }}"
+          echo "║  cordova-android: ${{ env.CORDOVA_ANDROID_VERSION }}"
+          echo "║  Build Type: DEBUG"
+          echo "║  Commit: ${{ github.sha }}"
+          echo "║  Branch: ${{ github.ref_name }}"
+          echo "╚══════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "Download APK di tab Actions -> Artifacts"
