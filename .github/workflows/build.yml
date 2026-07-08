@@ -1,0 +1,49 @@
+name: Build Debug APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Add Android platform
+        run: cordova platform add android --no-fetch
+
+      - name: Clean previous build
+        run: |
+          rm -rf platforms/android/app/build
+          cd platforms/android && ./gradlew clean || true
+
+      - name: Copy build-extras
+        run: cp build-extras.gradle platforms/android/app/
+
+      - name: Build Debug APK (API 34)
+        run: cordova build android --debug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wemos-app-debug
+          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
