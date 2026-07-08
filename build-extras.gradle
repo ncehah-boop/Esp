@@ -3,9 +3,21 @@ ext {
     targetSdkVersion = 34
     compileSdkVersion = 34
 }
+
 android {
     defaultConfig {
         versionCode 42
         versionName "4.2.0"
+    }
+}
+
+// Fix XmlParser / Groovy issue
+dependencies {
+    classpath 'org.codehaus.groovy:groovy-xml:3.0.21'
+}
+
+allprojects {
+    tasks.withType(org.gradle.api.tasks.compile.GroovyCompile) {
+        classpath += files("${System.getenv('ANDROID_SDK_ROOT')}/platforms/android-34/android.jar")
     }
 }
