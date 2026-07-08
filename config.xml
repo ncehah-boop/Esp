@@ -1,21 +1,105 @@
-<?xml version='1.0' encoding='utf-8'?>
-<widget id="com.wemos.smartwatchpro" version="4.2.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>Wemos Smartwatch Pro</name>
-    <description>Wemos D1 Alarm Monitor</description>
-    <author email="you@example.com" href="https://github.com">You</author>
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:cdv="http://cordova.apache.org/ns/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="com.wemos.smartwatchpro"
+        version="4.2.0"
+        android-versionCode="42000">
+
+    <name>Wemos D1 Pro</name>
+    <description>Monitoring dan kontrol Wemos D1 via WiFi dengan alarm background</description>
+    <author email="dev@wemos.local" href="https://wemos.local">Wemos IoT Team</author>
     <content src="index.html" />
+
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
     <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <allow-navigation href="*" />
+
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="BackgroundColor" value="#0d0b1a" />
+    <preference name="KeepRunning" value="true" />
+    <preference name="LoadUrlTimeoutValue" value="60000" />
+    <preference name="AndroidLaunchMode" value="singleTop" />
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+    <preference name="AndroidInsecureFileModeEnabled" value="true" />
+    <preference name="GradlePluginKotlinEnabled" value="true" />
+    <preference name="AndroidXEnabled" value="true" />
+    <preference name="AndroidPostSplashScreenTheme" value="@style/Theme.AppCompat.NoActionBar" />
+
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarBackgroundColor" value="#0d0b1a" />
+    <preference name="StatusBarStyle" value="lightcontent" />
+    <preference name="BackgroundMode" value="true" />
+    <preference name="Scheme" value="https" />
+    <preference name="Hostname" value="localhost" />
+
     <platform name="android">
-        <preference name="AndroidXEnabled" value="true" />
-        <preference name="backgroundMode" value="true" />
-        <preference name="KeepRunning" value="true" />
-        <preference name="Orientation" value="portrait" />
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:usesCleartextTraffic="true" />
-        </edit-config>
+        <preference name="android-minSdkVersion" value="24" />
+        <preference name="android-targetSdkVersion" value="34" />
+        <preference name="android-compileSdkVersion" value="34" />
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/screen/android/splash.png" />
+        <preference name="AndroidWindowSplashScreenBackground" value="#0d0b1a" />
+        <preference name="AndroidWindowSplashScreenIconBackgroundColor" value="#0d0b1a" />
+
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.VIBRATE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+            <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+            <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+        </config-file>
+
+        <config-file parent="/manifest/application" target="AndroidManifest.xml">
+            <service android:name="de.appplant.cordova.plugin.background.ForegroundService"
+                     android:foregroundServiceType="dataSync"
+                     android:exported="false" />
+            <receiver android:name="de.appplant.cordova.plugin.localnotification.TriggerReceiver"
+                      android:exported="false" />
+            <receiver android:name="de.appplant.cordova.plugin.localnotification.ClearReceiver"
+                      android:exported="false" />
+            <receiver android:name="de.appplant.cordova.plugin.localnotification.RestoreReceiver"
+                      android:exported="false">
+                <intent-filter>
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                </intent-filter>
+            </receiver>
+        </config-file>
+
+        <icon src="res/icon/android/mipmap-mdpi/ic_launcher.png" density="mdpi" />
+        <icon src="res/icon/android/mipmap-hdpi/ic_launcher.png" density="hdpi" />
+        <icon src="res/icon/android/mipmap-xhdpi/ic_launcher.png" density="xhdpi" />
+        <icon src="res/icon/android/mipmap-xxhdpi/ic_launcher.png" density="xxhdpi" />
+        <icon src="res/icon/android/mipmap-xxxhdpi/ic_launcher.png" density="xxxhdpi" />
+
+        <splash src="res/screen/android/splash-port-mdpi.png" density="port-mdpi" />
+        <splash src="res/screen/android/splash-port-hdpi.png" density="port-hdpi" />
+        <splash src="res/screen/android/splash-port-xhdpi.png" density="port-xhdpi" />
+        <splash src="res/screen/android/splash-port-xxhdpi.png" density="port-xxhdpi" />
+        <splash src="res/screen/android/splash-port-xxxhdpi.png" density="port-xxxhdpi" />
     </platform>
+
+    <plugin name="cordova-plugin-background-mode" source="npm" />
+    <plugin name="cordova-plugin-local-notification" source="npm" />
+    <plugin name="cordova-plugin-insomnia" source="npm" />
+    <plugin name="cordova-plugin-statusbar" source="npm" />
+    <plugin name="cordova-plugin-vibration" source="npm" />
+    <plugin name="cordova-plugin-network-information" source="npm" />
+    <plugin name="cordova-plugin-device" source="npm" />
+    <plugin name="cordova-plugin-android-permissions" source="npm" />
+    <plugin name="cordova-plugin-foreground-service" source="npm" />
+
 </widget>
