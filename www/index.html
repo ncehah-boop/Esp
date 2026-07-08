@@ -1577,18 +1577,21 @@
 
         // ===== NOTIFICATION =====
         function sendNativeNotification(title, body) {
-            if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
-                cordova.plugins.notification.local.cancel(1, function() {
-                    cordova.plugins.notification.local.schedule({
-                        id: 1,
-                        title: title,
-                        text: body,
-                        androidChannelId: 'wemos_alarm_channel',
-                        androidChannelEnableVibration: true,
-                        androidOngoing: true,
-                        badgeNumber: 1,
-                        sound: 'default',
-                        trigger: { in: 1, unit: 'second' }
+    if (cordovaReady && cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+        cordova.plugins.notification.local.schedule({
+            id: 1,
+            title: title,
+            text: body,
+            androidChannelId: 'wemos_alarm_channel',
+            androidChannelEnableVibration: true,
+            androidOngoing: true,
+            badgeNumber: 1,
+            sound: 'default',
+            wake: true,                    // Bangunkan layar
+            lockscreen: true,              // Tampil di lockscreen
+            priority: 2,                   // MAX priority
+            visibility: 1,                 // Public visibility
+            trigger: { in: 1, unit: 'second' }
                     });
                 });
                 return;
@@ -1693,44 +1696,65 @@
 
         // ===== WAKE LOCK =====
         function wakeUpScreen() {
-            if (!cordovaReady) return;
-            if (window.plugins && window.plugins.insomnia) window.plugins.insomnia.keepAwake();
-            if (cordova.plugins && cordova.plugins.backgroundMode) {
-                cordova.plugins.backgroundMode.wakeUp();
-                cordova.plugins.backgroundMode.unlock();
-            }
-        }
+    if (!cordovaReady) return;
+    if (window.plugins && window.plugins.insomnia) window.plugins.insomnia.keepAwake();
+    if (cordova.plugins && cordova.plugins.backgroundMode) {
+        cordova.plugins.backgroundMode.wakeUp();
+        cordova.plugins.backgroundMode.unlock();
+    }
+}
+
 
         function releaseWakeLock() {
-            if (!cordovaReady) return;
-            if (window.plugins && window.plugins.insomnia) window.plugins.insomnia.allowSleepAgain();
-        }
+    if (!cordovaReady) return;
+    if (window.plugins && window.plugins.insomnia) window.plugins.insomnia.allowSleepAgain();
+}
+function requestBatteryOptimization() {
+    if (!cordovaReady) return;
+    if (cordova.plugins && cordova.plugins.backgroundMode) {
+        cordova.plugins.backgroundMode.disableBatteryOptimizations();
+    }
+}
+
 
         // ===== ALARM =====
         function onAlarmTriggered() {
-            log('🚨 ALARM TRIGGERED! (Suara+Getar+Notif+Wake)', 'alarm');
-            screenOn();
-            lastBtnMs = Date.now();
-            wakeUpScreen();
+    log('ALARM TRIGGERED! (Suara+Getar+Wake)', 'alarm');
+    
+    // Bangunkan layar & keep awake
+    screenOn();
+    lastBtnMs = Date.now();
+    wakeUpScreen();
+    
+    // Background mode wake up & unlock
+    if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
+        cordova.plugins.backgroundMode.wakeUp();
+        cordova.plugins.backgroundMode.unlock();
+    }
+    
+    // Insomnia keep awake
+    if (cordovaReady && window.plugins && window.plugins.insomnia) {
+        window.plugins.insomnia.keepAwake();
+    }
+    
+    // Suara
+    if (soundEnabled) startContinuousAlarm();
+    
+    // Getar
+    if (vibrateEnabled) startContinuousVibrate();
+    
+    // Notifikasi native dengan wake screen
+    sendNativeNotification('Wemos Alarm!', 'Sensor atau D4 trigger!');
+    
+    // Tampilkan toast & flash
+    alarmToast.classList.add('show');
+    alarmFlash.classList.add('active');
+    
+    saveAppState();
+    updateAlarmUI();
+    updateSnoozeUI();
+}
 
-            if (cordovaReady && cordova.plugins && cordova.plugins.backgroundMode) {
-                cordova.plugins.backgroundMode.wakeUp();
-                cordova.plugins.backgroundMode.unlock();
-            }
-
-            if (soundEnabled) startContinuousAlarm();
-            if (vibrateEnabled) startContinuousVibrate();
-
-            sendNativeNotification('🚨 Wemos Alarm!', 'Sensor atau D4 trigger!');
-            startAlarmNotifInterval();
-
-            alarmToast.classList.add('show');
-            alarmFlash.classList.add('active');
-
-            saveAppState();
-            updateAlarmUI();
-            updateSnoozeUI();
-        }
 
         function onAlarmCleared() {
             log('Alarm cleared', 'ok');
@@ -2667,47 +2691,83 @@
         document.getElementById('saveWifiBtn').addEventListener('click', saveWifiConfig);
 
         // ===== CORDOVA =====
-        document.addEventListener('deviceready', function() {
-            cordovaReady = true;
-            log('Cordova ready - Native features available', 'ok');
+       document.addEventListener('deviceready', function() {
+    cordovaReady = true;
+    log('Cordova ready - Native features available', 'ok');
 
-            // ===== PERBAIKAN UTAMA: STATUS BAR =====
-            if (window.StatusBar) {
-                StatusBar.overlaysWebView(false);
-                StatusBar.styleBlackTranslucent();
-                StatusBar.backgroundColorByHexString('#0d0b1a');
-                if (window.StatusBar._ready) {
-                    StatusBar.hide();
-                    StatusBar.show();
-                }
-            }
+    // Status Bar
+    if (window.StatusBar) {
+        StatusBar.overlaysWebView(false);
+        StatusBar.styleBlackTranslucent();
+        StatusBar.backgroundColorByHexString('#0d0b1a');
+        if (window.StatusBar._ready) {
+            StatusBar.hide();
+            StatusBar.show();
+        }
+    }
 
-            // ===== FULLSCREEN / LAYOUT =====
-            if (cordova.plugins && cordova.plugins.backgroundMode) {
-                cordova.plugins.backgroundMode.enable();
-                cordova.plugins.backgroundMode.overrideBackButton();
+    // Background Mode
+    if (cordova.plugins && cordova.plugins.backgroundMode) {
+        cordova.plugins.backgroundMode.enable();
+        cordova.plugins.backgroundMode.overrideBackButton();
+        
+        cordova.plugins.backgroundMode.setDefaults({
+            title: 'Wemos Alarm Aktif',
+            text: 'Monitoring sensor Wemos...',
+            icon: 'icon',
+            color: 'F39C12',
+            resume: true,
+            hidden: false,
+            bigText: true,
+            silent: true
+        });
+        
+        cordova.plugins.backgroundMode.on('activate', function() {
+            log('Background mode ACTIVE', 'dim');
+            cordova.plugins.backgroundMode.disableWebViewOptimizations();
+            if (!pollInterval) startPolling();
+        });
+        
+        cordova.plugins.backgroundMode.on('deactivate', function() {
+            log('Background mode DEACTIVATED', 'dim');
+        });
+    }
 
-                cordova.plugins.backgroundMode.setDefaults({
-                    title: 'Wemos Alarm Aktif',
-                    text: 'Monitoring sensor Wemos...',
-                    icon: 'icon',
-                    color: 'F39C12',
-                    resume: true,
-                    hidden: false,
-                    bigText: true,
-                    silent: true
-                });
+    // Notif Channel
+    if (cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+        cordova.plugins.notification.local.createChannel({
+            androidChannelId: 'wemos_alarm_channel',
+            androidChannelName: 'Wemos Alarm',
+            androidChannelImportance: 'IMPORTANCE_HIGH',
+            androidChannelEnableVibration: true
+        });
+    }
 
-                cordova.plugins.backgroundMode.on('activate', function() {
-                    log('Background mode ACTIVE', 'dim');
-                    cordova.plugins.backgroundMode.disableWebViewOptimizations();
-                    if (!pollInterval) startPolling();
-                });
+    // Request notif permission
+    requestNotif();
+    
+    // Request battery optimization disable (TAMBAHAN BARU)
+    requestBatteryOptimization();
 
-                cordova.plugins.backgroundMode.on('deactivate', function() {
-                    log('Background mode DEACTIVATED', 'dim');
-                });
-            }
+    // Load state
+    loadAppState();
+    
+    // Screen on
+    screenOn();
+    lastBtnMs = Date.now();
+    
+    // Alarm aktif?
+    if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+        onAlarmTriggered();
+    }
+    
+    // Start polling & loop
+    if (!pollInterval) startPolling();
+    if (!loopId) mainLoop();
+    
+    log('Aplikasi siap dengan background mode!', 'ok');
+}, false);
+
 
             // ===== NOTIF CHANNEL =====
             if (cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
@@ -2743,30 +2803,29 @@
 
         // ===== PAUSE / RESUME =====
         document.addEventListener('pause', function() {
-            saveAppState();
-            log('App paused, background polling continues', 'dim');
-        }, false);
+    saveAppState();
+    log('App paused, background polling continues', 'dim');
+}, false);
 
-        document.addEventListener('resume', function() {
-            log('App resumed', 'ok');
-            offlineGraceCount = 0;
-            lastWifiStatus = true;
-            screenOn();
-            lastBtnMs = Date.now();
+document.addEventListener('resume', function() {
+    log('App resumed', 'ok');
+    offlineGraceCount = 0;
+    lastWifiStatus = true;
+    screenOn();
+    lastBtnMs = Date.now();
+    
+    if (!pollInterval) startPolling();
+    
+    setTimeout(function() {
+        pollStatus();
+    }, 500);
+    
+    if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
+        wakeUpScreen();
+        onAlarmTriggered();
+    }
+}, false);
 
-            if (!pollInterval) {
-                startPolling();
-            }
-
-            setTimeout(function() {
-                pollStatus();
-            }, 500);
-
-            if (htmlAlarmActive && !htmlAlarmAcked && !snoozeActive) {
-                wakeUpScreen();
-                onAlarmTriggered();
-            }
-        }, false);
 
         // ===== DETEKSI PERUBAHAN JARINGAN (opsional) =====
         if (navigator.connection) {
