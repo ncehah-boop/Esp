@@ -2,10 +2,10 @@
 <widget xmlns="http://www.w3.org/ns/widgets"
         xmlns:cdv="http://cordova.apache.org/ns/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="com.wemos.smartwatchpro"
+        id="com.ESP.smartwatchpro"
         version="4.2.0"
         android-versionCode="42000">
-  <name>Wemos D1 Pro</name>
+  <name>ESP D1 Pro</name>
   <description>Monitoring dan kontrol Wemos D1 via WiFi dengan alarm background</description>
   <author email="dev@wemos.local" href="https://wemos.local">Wemos IoT Team</author>
   <content src="index.html" />
